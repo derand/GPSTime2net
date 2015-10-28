@@ -2,7 +2,8 @@ program gpstime2net_client;
 
 uses
   Forms,
-  main in 'main.pas' {Form1};
+  main in 'main.pas' {Form1},
+  Logger in '..\libs\Logger.pas';
 
 {$R *.res}
 

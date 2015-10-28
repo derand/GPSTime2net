@@ -1,6 +1,7 @@
 # OS X files
 .DS_Store
 ._*
+*.log
 
 # Delphi temp files
 *.~pas
