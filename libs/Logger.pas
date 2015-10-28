@@ -17,6 +17,7 @@ type
     constructor Create; overload;
     constructor Create(log_level: ELogLevel; path: string; file_suffix: String); overload;
     procedure msg(log_level: ELogLevel; msg: String);
+    function getLogLevel: ELogLevel;
   end;
 
 implementation
@@ -69,6 +70,11 @@ begin
     Writeln(log, FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', Now) + '[' + LogLevel_strings[Ord(log_level)] + ']:' + Chr(9) +  '' + msg);
     Flush(log);
   end;
+end;
+
+function TLogger.getLogLevel: ELogLevel;
+begin
+  Result := _log_level;
 end;
 
 end.

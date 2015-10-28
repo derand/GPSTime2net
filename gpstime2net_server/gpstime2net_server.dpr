@@ -3,7 +3,9 @@ program gpstime2net_server;
 uses
   Forms,
   main in 'main.pas' {Form1},
-  MySocketThread in 'MySocketThread.pas';
+  MySocketThread in 'MySocketThread.pas',
+  Logger in '..\libs\Logger.pas';
+
 
 {$R *.res}
 

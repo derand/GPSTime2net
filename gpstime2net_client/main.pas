@@ -164,7 +164,7 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   logger := TLogger.Create(LogDebug, '../', 'c');
-  Logger.msg(LogDebug, 'Client started(' + IntToStr(Ord(LogDebug)) + ')');
+  Logger.msg(LogDebug, 'Client started(' + IntToStr(Ord(Logger.getLogLevel)) + ')');
 end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);

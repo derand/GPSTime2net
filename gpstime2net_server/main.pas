@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, AfComPort, DateUtils, Sockets,
-  ScktComp, MySocketThread, AfDataDispatcher;
+  ScktComp, MySocketThread, AfDataDispatcher, Logger;
 
 type
   TForm1 = class(TForm)
@@ -32,6 +32,7 @@ type
       var SocketThread: TServerClientThread);
     procedure srvrsckt1ThreadChange(Sender: TObject;
       Thread: TServerClientThread);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
     data_buffer: WideString;
@@ -45,12 +46,15 @@ type
     date: TDateTime;
     syncing: Boolean;
 
+    logger: TLogger;
+
     function check_buffer: Boolean;
     function LocalDateTimeFromUTCDateTime(const UTCDateTime: TDateTime): TDateTime;
   public
     { Public declarations }
     function getLocalDateTime(): TDateTime;
     function getGPSDateTime(): TDateTime;
+    function getLogger(): Tlogger;
   end;
 
 var
@@ -62,6 +66,9 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  logger := TLogger.Create(LogDebug, '../', 's');
+  logger.msg(LogInfo, 'Client started(' + IntToStr(Ord(Logger.getLogLevel)) + ')');
+
   sync_flag := False;
   syncing := False;
   AfComPort1.Open;
@@ -70,6 +77,11 @@ begin
   data_buffer := '$';
   sync_time := Now;
   sync_ticks := GetTickCount;
+end;
+
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  logger.Free;
 end;
 
 function TForm1.check_buffer: Boolean;
@@ -82,6 +94,7 @@ var
   vsys : _SYSTEMTIME;
   date_idx: Byte;
   curr_ttime: TDateTime;
+  diff1, diff2: Int64;
 begin
   lines := TStringList.Create;
   //gps_format.ShortDateFormat := 'ddmmyy';
@@ -121,6 +134,7 @@ begin
                 sync_time := Now;
                 sync_ticks := last_ticks;
                 comp := sync_time;
+                logger.msg(LogInfo, 'Time synchronized');
               end else begin
                 comp := Now;
               end;
@@ -129,15 +143,19 @@ begin
               curr_ttime := IncMillisecond(sync_time, last_ticks-sync_ticks);
               Label2.Caption := FormatDateTime('dd/mm/yyyy hh:nn:ss.zzz', date);
               Label4.Caption := FormatDateTime('dd/mm/yyyy hh:nn:ss.zzz', comp);
-              Label6.Caption := IntToStr(MilliSecondsBetween(LocalDateTimeFromUTCDateTime(date), comp)) + ' ms';
-              Label8.Caption := IntToStr(MilliSecondsBetween(LocalDateTimeFromUTCDateTime(date), curr_ttime)) + ' ms';
+              diff1 := MilliSecondsBetween(LocalDateTimeFromUTCDateTime(date), comp);
+              diff2 := MilliSecondsBetween(LocalDateTimeFromUTCDateTime(date), curr_ttime);
+              Label6.Caption := IntToStr(diff1) + ' ms';
+              Label8.Caption := IntToStr(diff2) + ' ms';
               Label7.Caption := lines[j];
+              logger.msg(LogDebug, components[1] + ' ' + IntToStr(diff1) + '/' + IntToStr(diff2));
             end;
           end;
         finally
           components.Free;
           syncing := False;
         end;
+        logger.msg(LogVerbose, lines[j]);
         //Memo1.Lines.Add(lines[j]);
       end;
 
@@ -182,6 +200,11 @@ begin
   Result := IncMillisecond(date, GetTickCount()-last_ticks);
 end;
 
+function TForm1.getLogger(): TLogger;
+begin
+  Result := logger;
+end;
+
 procedure TForm1.AfComPort1DataRecived(Sender: TObject; Count: Integer);
 var
   data: String;
@@ -197,6 +220,7 @@ end;
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   sync_flag := True;
+  logger.msg(LogDebug, 'Waiting to sync...');
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
