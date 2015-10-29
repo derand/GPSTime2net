@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, AfComPort, DateUtils, Sockets,
-  ScktComp, MySocketThread, AfDataDispatcher, Logger;
+  ScktComp, MySocketThread, AfDataDispatcher, Logger, MyCommon;
 
 type
   TForm1 = class(TForm)
@@ -67,7 +67,7 @@ implementation
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   logger := TLogger.Create(LogDebug, '../', 's');
-  logger.msg(LogInfo, 'Client started(' + IntToStr(Ord(Logger.getLogLevel)) + ')');
+  logger.msg(LogInfo, 'Client started(' + IntToStr(Ord(logger.getLogLevel)) + ')');
 
   sync_flag := False;
   syncing := False;
@@ -95,12 +95,14 @@ var
   date_idx: Byte;
   curr_ttime: TDateTime;
   diff1, diff2: Int64;
+  ticks: Int64;
 begin
   lines := TStringList.Create;
   //gps_format.ShortDateFormat := 'ddmmyy';
   //gps_format.LongTimeFormat := 'hh24mmss.zz';
   //gps_format.DateSeparator := '';
   //gps_format.TimeSeparator := '';
+  ticks := GetTickCount;
   try
     ExtractStrings(['$'], [], PChar(String(data_buffer)), lines);
     if lines.Count > 2 then
@@ -119,7 +121,7 @@ begin
             if (CompareStr('GPRMC', components[0]) = 0) and (length(components[date_idx]) = 6) and (length(components[1]) = 9) then
             begin
               syncing := True;
-              last_ticks := GetTickCount;
+              last_ticks := ticks;
               vsys.wYear := StrToInt(copy(components[date_idx], 5, 2))+2000;
               vsys.wMonth := StrToInt(copy(components[date_idx], 3, 2));
               vsys.wDay := StrToInt(copy(components[date_idx], 1, 2));
@@ -129,10 +131,12 @@ begin
               vsys.wMilliseconds := StrToInt(copy(components[1], 8, 2))*10;
               if sync_flag then
               begin
-                SetSystemTime(vsys);
+                //SetSystemTime(vsys);
+                SetSystemTimeWithDiff(vsys, GetTickCount - ticks, TTSystem);
                 sync_flag := False;
+                sync_ticks := GetTickCount;
                 sync_time := Now;
-                sync_ticks := last_ticks;
+                //sync_ticks := last_ticks;
                 comp := sync_time;
                 logger.msg(LogInfo, 'Time synchronized');
               end else begin
@@ -148,7 +152,7 @@ begin
               Label6.Caption := IntToStr(diff1) + ' ms';
               Label8.Caption := IntToStr(diff2) + ' ms';
               Label7.Caption := lines[j];
-              logger.msg(LogDebug, components[1] + ' ' + IntToStr(diff1) + '/' + IntToStr(diff2));
+              logger.msg(LogDebug, components[2] + ' ' + IntToStr(diff1) + '/' + IntToStr(diff2));
             end;
           end;
         finally

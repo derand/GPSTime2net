@@ -3,7 +3,8 @@ program gpstime2net_client;
 uses
   Forms,
   main in 'main.pas' {Form1},
-  Logger in '..\libs\Logger.pas';
+  Logger in '..\libs\Logger.pas',
+  MyCommon in '..\libs\MyCommon.pas';
 
 {$R *.res}
 

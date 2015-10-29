@@ -4,8 +4,8 @@ uses
   Forms,
   main in 'main.pas' {Form1},
   MySocketThread in 'MySocketThread.pas',
-  Logger in '..\libs\Logger.pas';
-
+  Logger in '..\libs\Logger.pas',
+  MyCommon in '..\libs\MyCommon.pas';
 
 {$R *.res}
 

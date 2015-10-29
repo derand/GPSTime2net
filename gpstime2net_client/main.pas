@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ScktComp, DateUtils, Logger;
+  Dialogs, StdCtrls, ScktComp, DateUtils, Logger, MyCommon, StrUtils;
 
 type
   TForm1 = class(TForm)
@@ -31,7 +31,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
-    request_time: DWord;
     logger : TLogger;
   public
     { Public declarations }
@@ -64,13 +63,11 @@ begin
     if ComboBox1.ItemIndex = 0 then
     begin
       Logger.msg(LogInfo, 'Send local time request');
-      request_time := GetTickCount;
-      clntsckt1.Socket.SendText('time');
+      clntsckt1.Socket.SendText('local#'+IntToStr(GetTickCount));
     end else if ComboBox1.ItemIndex = 1 then
     begin
       Logger.msg(LogInfo, 'Send gps time request');
-      request_time := GetTickCount;
-      clntsckt1.Socket.SendText('gps');
+      clntsckt1.Socket.SendText('gps#'+IntToStr(GetTickCount));
     end;
   end else begin
     ShowMessage('Not connected to server');
@@ -79,44 +76,40 @@ end;
 
 procedure TForm1.clntsckt1Read(Sender: TObject; Socket: TCustomWinSocket);
 var
-  buff: string;
+  buff, tmp: string;
   ticks, net_ticks, server_calc_ticks, add_ticks: DWord;
   vsys : _SYSTEMTIME;
-  dt: TDateTime;
+  pos: Integer;
 begin
-  //ShowMessage(Socket.ReceiveText);
   ticks := GetTickCount;
-  net_ticks := ticks - request_time;
   buff := Socket.ReceiveText;
   Logger.msg(LogVerbose, 'Receive: ' + buff);
-  if Length(buff) > 24 then
+  if (Length(buff) > 24) and ((buff[1] = 'L') or (buff[1] = 'G')) then
   begin
     try
-      vsys.wDay := StrToInt(Copy(buff, 1, 2));
-      vsys.wMonth := StrToInt(Copy(buff, 4, 2));
-      vsys.wYear := StrToInt(Copy(buff, 7, 4));
-      vsys.wHour := StrToInt(Copy(buff, 12, 2));
-      vsys.wMinute := StrToInt(Copy(buff, 15, 2));
-      vsys.wSecond := StrToInt(Copy(buff, 18, 2));
-      vsys.wMilliseconds := StrToInt(Copy(buff, 21, 3));
-      server_calc_ticks := StrToInt(Copy(buff, 25, Length(buff)-24));
+      vsys.wDay := StrToInt(Copy(buff, 2, 2));
+      vsys.wMonth := StrToInt(Copy(buff, 5, 2));
+      vsys.wYear := StrToInt(Copy(buff, 8, 4));
+      vsys.wHour := StrToInt(Copy(buff, 13, 2));
+      vsys.wMinute := StrToInt(Copy(buff, 16, 2));
+      vsys.wSecond := StrToInt(Copy(buff, 19, 2));
+      vsys.wMilliseconds := StrToInt(Copy(buff, 22, 3));
+      tmp := Copy(buff, 26, Length(buff)-25);
+      pos := AnsiPos('#', tmp);
+      server_calc_ticks := StrToInt(Copy(tmp, pos+1, Length(tmp)-pos));
+      SetLength(tmp, pos-1);
+      if Length(tmp) > 0 then
+      begin
+        net_ticks := ticks - StrToInt(tmp);
+      end else
+        net_ticks := server_calc_ticks;
     except
       Logger.msg(LogError, 'Error string converting: ' + buff);
       Exit;
     end;
     add_ticks := GetTickCount - ticks + (net_ticks - server_calc_ticks) div 2;
-    if add_ticks = 0 then
-    begin
-      if ComboBox1.ItemIndex = 0 then SetLocalTime(vsys)
-      else SetSystemTime(vsys);
-    end else begin
-      dt := EncodeDateTime(vsys.wYear, vsys.wMonth, vsys.wDay, vsys.wHour, vsys.wMinute, vsys.wSecond, vsys.wMilliseconds);
-      dt := IncMillisecond(dt, GetTickCount - ticks + (net_ticks - server_calc_ticks) div 2);
-      DecodeDate(dt, vsys.wYear, vsys.wMonth, vsys.wDay);
-      DecodeTime(dt, vsys.wHour, vsys.wMinute, vsys.wSecond, vsys.wMilliseconds);
-      if ComboBox1.ItemIndex = 0 then SetLocalTime(vsys)
-      else SetSystemTime(vsys);
-    end;
+    if buff[1] = 'L' then SetSystemTimeWithDiff(vsys, add_ticks, TTLocal)
+    else SetSystemTimeWithDiff(vsys, add_ticks, TTSystem);
     Logger.msg(LogInfo, 'Time updated (' + IntToStr(add_ticks) + ')');
     ShowMessage(IntToStr(server_calc_ticks) + ' ' + buff + ' ' + IntToStr(add_ticks));
   end else begin
