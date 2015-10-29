@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, AfComPort, DateUtils, Sockets,
-  ScktComp, MySocketThread, AfDataDispatcher, Logger, MyCommon;
+  ScktComp, MySocketThread, AfDataDispatcher, Logger, MyCommon, ExtCtrls;
 
 type
   TForm1 = class(TForm)
@@ -23,6 +23,7 @@ type
     Button2: TButton;
     srvrsckt1: TServerSocket;
     Label10: TLabel;
+    Timer1: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure AfComPort1DataRecived(Sender: TObject; Count: Integer);
     procedure Button1Click(Sender: TObject);
@@ -30,9 +31,12 @@ type
     procedure srvrsckt1GetThread(Sender: TObject;
       ClientSocket: TServerClientWinSocket;
       var SocketThread: TServerClientThread);
-    procedure srvrsckt1ThreadChange(Sender: TObject;
-      Thread: TServerClientThread);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Timer1Timer(Sender: TObject);
+    procedure srvrsckt1ThreadStart(Sender: TObject;
+      Thread: TServerClientThread);
+    procedure srvrsckt1ThreadEnd(Sender: TObject;
+      Thread: TServerClientThread);
   private
     { Private declarations }
     data_buffer: WideString;
@@ -246,7 +250,22 @@ begin
   SocketThread :=  TMySocketThread.Create(False, ClientSocket);
 end;
 
-procedure TForm1.srvrsckt1ThreadChange(Sender: TObject;
+procedure TForm1.Timer1Timer(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i:=0 to srvrsckt1.Socket.ActiveConnections-1 do
+    srvrsckt1.Socket.Connections[i].SendText('REFRESH');
+end;
+
+procedure TForm1.srvrsckt1ThreadStart(Sender: TObject;
+  Thread: TServerClientThread);
+begin
+  logger.msg(LogInfo, 'Client ' + Thread.ClientSocket.RemoteAddress + ' connected');
+  Label10.Caption := 'Connections: ' + IntToStr(srvrsckt1.Socket.ActiveConnections);
+end;
+
+procedure TForm1.srvrsckt1ThreadEnd(Sender: TObject;
   Thread: TServerClientThread);
 begin
   Label10.Caption := 'Connections: ' + IntToStr(srvrsckt1.Socket.ActiveConnections);

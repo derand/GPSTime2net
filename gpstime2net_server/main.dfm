@@ -114,8 +114,13 @@ object Form1: TForm1
     Port = 1212
     ServerType = stThreadBlocking
     OnGetThread = srvrsckt1GetThread
-    OnThreadStart = srvrsckt1ThreadChange
-    OnThreadEnd = srvrsckt1ThreadChange
+    OnThreadStart = srvrsckt1ThreadStart
+    OnThreadEnd = srvrsckt1ThreadEnd
     Left = 272
+  end
+  object Timer1: TTimer
+    Interval = 60000
+    OnTimer = Timer1Timer
+    Left = 304
   end
 end

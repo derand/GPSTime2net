@@ -2,7 +2,7 @@ unit MySocketThread;
 
 interface
 
-uses ScktComp, Dialogs, Windows, SysUtils, StrUtils;
+uses ScktComp, Dialogs, Windows, SysUtils, StrUtils, Logger;
 
 type
   TMySocketThread = class(TServerClientThread)
@@ -42,12 +42,14 @@ begin
       begin
         buff := '';
         if l <> 0 then ClientSocket.Close;
+        Form1.getLogger.msg(LogInfo, 'Client ' + ClientSocket.RemoteAddress + ' disconnected');
         Terminate;
         Exit;
       end;
       SetLength(buff, l);
       ClientSocket.ReceiveBuf(buff[1], l);
       ticks := GetTickCount;
+      Form1.getLogger.msg(LogVerbose, 'Recive: ''' + buff+ ''' from client ' + ClientSocket.RemoteAddress);
       l := AnsiPos('#', buff);
       if l > 0 then
       begin
@@ -79,6 +81,7 @@ begin
       //ShowMessage(buff);
     end;
   end;
+  Form1.getLogger.msg(LogInfo, 'Client ' + ClientSocket.RemoteAddress + ' disconnected');
   ClientSocket.Close;
   Terminate;
 end;
