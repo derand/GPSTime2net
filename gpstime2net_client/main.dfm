@@ -36,6 +36,13 @@ object Form1: TForm1
     Height = 13
     Caption = 'Time:'
   end
+  object lbl3: TLabel
+    Left = 200
+    Top = 80
+    Width = 46
+    Height = 13
+    Caption = 'Diff: 0 ms'
+  end
   object edt1: TEdit
     Left = 48
     Top = 8
@@ -95,5 +102,11 @@ object Form1: TForm1
     OnError = clntsckt1Error
     Left = 280
     Top = 8
+  end
+  object tmr1: TTimer
+    Interval = 3000
+    OnTimer = tmr1Timer
+    Left = 280
+    Top = 40
   end
 end
