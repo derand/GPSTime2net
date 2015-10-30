@@ -50,6 +50,13 @@ type
     date: TDateTime;
     syncing: Boolean;
 
+    //
+    active: string;
+    diff1, diff2: Int64;
+    calc_type: byte;
+    sattelite_count: byte;
+    tm_str1, tm_str2: string;
+
     logger: TLogger;
 
     function check_buffer: Boolean;
@@ -81,6 +88,9 @@ begin
   data_buffer := '$';
   sync_time := Now;
   sync_ticks := GetTickCount;
+
+  calc_type := 0;
+  sattelite_count := 0;
 end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -98,7 +108,6 @@ var
   vsys : _SYSTEMTIME;
   date_idx: Byte;
   curr_ttime: TDateTime;
-  diff1, diff2: Int64;
   ticks: Int64;
 begin
   lines := TStringList.Create;
@@ -156,7 +165,14 @@ begin
               Label6.Caption := IntToStr(diff1) + ' ms';
               Label8.Caption := IntToStr(diff2) + ' ms';
               Label7.Caption := lines[j];
-              logger.msg(LogDebug, components[2] + ' ' + IntToStr(diff1) + '/' + IntToStr(diff2));
+              active := components[2];
+              tm_str1 := components[1];
+            end else  if (CompareStr('GPGGA', components[0]) = 0) then
+            begin
+              calc_type := StrToInt(components[6]);
+              sattelite_count := StrToInt(components[7]);
+              tm_str2 := components[1];
+              logger.msg(LogDebug, active + IntToStr(calc_type) + ' ' + IntToStr(diff1) + '/' + IntToStr(diff2) + ' sc:' + IntToStr(sattelite_count) + ' ' + tm_str1 + '/' + tm_str2);
             end;
           end;
         finally
@@ -255,7 +271,7 @@ var
   i: Integer;
 begin
   for i:=0 to srvrsckt1.Socket.ActiveConnections-1 do
-    srvrsckt1.Socket.Connections[i].SendText('REFRESH');
+    srvrsckt1.Socket.Connections[i].SendText('update');
 end;
 
 procedure TForm1.srvrsckt1ThreadStart(Sender: TObject;
