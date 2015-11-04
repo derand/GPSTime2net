@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 192
   Top = 109
   Width = 331
-  Height = 137
+  Height = 154
   Caption = 'GPS time to network (client)'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -37,11 +37,18 @@ object Form1: TForm1
     Caption = 'Time:'
   end
   object lbl3: TLabel
-    Left = 200
-    Top = 80
+    Left = 48
+    Top = 104
     Width = 46
     Height = 13
     Caption = 'Diff: 0 ms'
+  end
+  object lbl4: TLabel
+    Left = 176
+    Top = 96
+    Width = 137
+    Height = 13
+    Caption = 'Unknown'
   end
   object edt1: TEdit
     Left = 48
@@ -90,6 +97,16 @@ object Form1: TForm1
     Items.Strings = (
       'Local time'
       'GPS time')
+  end
+  object chk1: TCheckBox
+    Left = 192
+    Top = 72
+    Width = 89
+    Height = 17
+    Caption = 'AutoSync'
+    Checked = True
+    State = cbChecked
+    TabOrder = 5
   end
   object clntsckt1: TClientSocket
     Active = False

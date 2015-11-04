@@ -81,7 +81,7 @@ if __name__=='__main__':
   #com.open()
   print com.isOpen()
 
-  fn = time.strftime("%Y_%m_%d", time.localtime(time.time()))
+  fn = time.strftime("%Y_%m_%d", time.localtime(time.time())) + '.log'
   log = open(fn, 'a')
 
   write2log(log, '')

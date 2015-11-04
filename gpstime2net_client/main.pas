@@ -20,6 +20,8 @@ type
     ComboBox1: TComboBox;
     tmr1: TTimer;
     lbl3: TLabel;
+    chk1: TCheckBox;
+    lbl4: TLabel;
     procedure btn1Click(Sender: TObject);
     procedure btn2Click(Sender: TObject);
     procedure clntsckt1Read(Sender: TObject; Socket: TCustomWinSocket);
@@ -58,7 +60,6 @@ begin
     clntsckt1.Address := edt1.Text;
     clntsckt1.Port := StrToInt(edt2.Text);
     clntsckt1.Active := True;
-    sync := True;
   end;
 end;
 
@@ -66,6 +67,7 @@ procedure TForm1.btn2Click(Sender: TObject);
 begin
   if clntsckt1.Active then
   begin
+    sync := True;
     if ComboBox1.ItemIndex = 0 then
     begin
       Logger.msg(LogInfo, 'Send local time request');
@@ -122,11 +124,19 @@ begin
       if buff[1] = 'L' then SetSystemTimeWithDiff(vsys, add_ticks, TTLocal)
       else SetSystemTimeWithDiff(vsys, add_ticks, TTSystem);
       Logger.msg(LogInfo, 'Time updated (' + IntToStr(add_ticks) + ')');
+      lbl4.Caption := FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', Now);
       //ShowMessage(IntToStr(server_calc_ticks) + ' ' + buff + ' ' + IntToStr(add_ticks));
     end;
     dt := EncodeDateTime(vsys.wYear, vsys.wMonth, vsys.wDay, vsys.wHour, vsys.wMinute, vsys.wSecond, vsys.wMilliseconds);
     diff := MilliSecondsBetween(dt, Now);
     lbl3.Caption := 'Diff: ' + IntToStr(diff) + ' ms';
+  end else if CompareStr(buff, 'update') = 0 then begin
+    Logger.msg(LogInfo, 'Receive update signal.');
+    if chk1.Checked then begin
+      sync := True;
+      Logger.msg(LogInfo, 'Autoupdate localtime');
+      clntsckt1.Socket.SendText('local#'+IntToStr(GetTickCount));
+    end;
   end else begin
     Logger.msg(LogError, 'Error in string: ' + buff);
   end;
