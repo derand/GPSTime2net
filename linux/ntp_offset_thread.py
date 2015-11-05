@@ -23,9 +23,12 @@ class NTPOffsetThread(threading.Thread):
             if not self._running:
                 break
             if i%10 == 0:
-                c = ntplib.NTPClient()
-                response = c.request('europe.pool.ntp.org', version=3)
-                self.com_reader_thread.ntp_offset = response.offset
+                try:
+                    c = ntplib.NTPClient()
+                    response = c.request('europe.pool.ntp.org', version=3)
+                    self.com_reader_thread.ntp_offset = response.offset
+                except ntplib.NTPException, e:
+                    pass
             i += 1
             time.sleep(1)
 
