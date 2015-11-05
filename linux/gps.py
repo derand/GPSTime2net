@@ -23,12 +23,12 @@ if __name__=='__main__':
     logger.start()
 
     prms = {
-      'port': '/dev/ttyUSB0',
-      'baudrate': 4800,
-      #'parity': serial.PARITY_ODD,
-      #'stopbits': serial.STOPBITS_TWO,
-      #'bytesize': serial.SEVENBITS,
-      #'timeout': 1,
+        'port': '/dev/ttyUSB0',
+        'baudrate': 4800,
+        #'parity': serial.PARITY_ODD,
+        #'stopbits': serial.STOPBITS_TWO,
+        #'bytesize': serial.SEVENBITS,
+        #'timeout': 1,
     }
     com_reader = ComReadThread(prms, log_queue)
     com_reader.start()
@@ -37,4 +37,15 @@ if __name__=='__main__':
     ntp_offset_thread.start()
 
     while True:
-        time.sleep(1)
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            break
+
+    ntp_offset_thread.stop()
+    com_reader.stop()
+    logger.stop()
+
+    ntp_offset_thread.join()
+    com_reader.join()
+    logger.join()

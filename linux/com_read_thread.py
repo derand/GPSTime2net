@@ -21,8 +21,10 @@ class ComReadThread(threading.Thread):
         self.com = None
         self.ntp_offset = 0
         self.ntp_offset_prev = self.ntp_offset
+        self._running = False
 
     def run(self):
+        self._running = True
         # configure the serial connections (the parameters differs on the device you are connecting to)
         self.com = serial.Serial(**self.com_prms)
         fcntl.flock(self.com.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -108,5 +110,10 @@ class ComReadThread(threading.Thread):
             if check_time and (time.time() - start_tm) > 3:
                 self.com.close()
                 return True
+            if not self._running:
+                break
         self.com.close()
         return False
+
+    def stop(self):
+        self._running = False

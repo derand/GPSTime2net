@@ -18,14 +18,16 @@ class NTPOffsetThread(threading.Thread):
 
     def run(self):
         self._running = True
+        i = 0
         while True:
             if not self._running:
                 break
-            c = ntplib.NTPClient()
-            response = c.request('europe.pool.ntp.org', version=3)
-            self.com_reader_thread.ntp_offset = response.offset
-            time.sleep(10)
-
+            if i%10 == 0:
+                c = ntplib.NTPClient()
+                response = c.request('europe.pool.ntp.org', version=3)
+                self.com_reader_thread.ntp_offset = response.offset
+            i += 1
+            time.sleep(1)
 
     def stop(self):
         self._running = False
