@@ -1,1 +1,2 @@
+ntplib==0.3.3
 pyserial==2.7
