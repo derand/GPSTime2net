@@ -5,7 +5,7 @@ __author__ = 'Andrey Derevyagin'
 __copyright__ = 'Copyright © 2015'
 
 import threading
-import ntplib
+import ntplib, socket
 import time
 
 class NTPOffsetThread(threading.Thread):
@@ -27,7 +27,7 @@ class NTPOffsetThread(threading.Thread):
                     c = ntplib.NTPClient()
                     response = c.request('europe.pool.ntp.org', version=3)
                     self.com_reader_thread.ntp_offset = response.offset
-                except ntplib.NTPException, e:
+                except (ntplib.NTPException, socket.gaierror) as e:
                     pass
             i += 1
             time.sleep(1)
