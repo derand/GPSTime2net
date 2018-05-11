@@ -30,8 +30,9 @@ if __name__=='__main__':
         #'bytesize': serial.SEVENBITS,
         #'timeout': 1,
     }
-    com_reader = ComReadThread(prms, log_queue)
-    com_reader.start()
+    #com_reader = ComReadThread(prms, log_queue)
+    #com_reader.start()
+    com_reader = None
 
     ntp_offset_thread = NTPOffsetThread(com_reader_thread=com_reader, log_queue=log_queue)
     ntp_offset_thread.start()
@@ -43,9 +44,11 @@ if __name__=='__main__':
             break
 
     ntp_offset_thread.stop()
-    com_reader.stop()
+    if com_reader:
+        com_reader.stop()
     logger.stop()
 
     ntp_offset_thread.join()
-    com_reader.join()
+    if com_reader:
+        com_reader.join()
     logger.join()

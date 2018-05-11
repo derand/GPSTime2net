@@ -7,6 +7,8 @@ __copyright__ = 'Copyright © 2015'
 import threading
 import ntplib, socket
 import time
+from logger_thread import Message
+import sys
 
 class NTPOffsetThread(threading.Thread):
     def __init__(self, com_reader_thread, log_queue=None):
@@ -25,8 +27,15 @@ class NTPOffsetThread(threading.Thread):
             if i%10 == 0:
                 try:
                     c = ntplib.NTPClient()
-                    response = c.request('europe.pool.ntp.org', version=3)
-                    self.com_reader_thread.ntp_offset = response.offset
+                    #response = c.request('europe.pool.ntp.org', version=3)
+                    response = c.request('rpi2', version=3)
+                    if self.com_reader_thread:
+                        self.com_reader_thread.ntp_offset = response.offset
+                    else:
+                        s = '%.6f'%response.offset
+                        print '\rNTP server offset: %s'%s.ljust(9),
+                        sys.stdout.flush()
+                        self.logger_queue.put(Message(s))
                 except (ntplib.NTPException, socket.gaierror) as e:
                     pass
             i += 1
