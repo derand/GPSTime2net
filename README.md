@@ -2,7 +2,7 @@
 
 This project gets exact time from GPS receiver and sync this time under network.
 
-Before open sources, install SocketServer & SocketClient components to Delphi:
+Before open sources trought IDE, install SocketServer & SocketClient components on Delphi:
 
     Component->Install Packages->Add->Delphi/Bin/dclsockets70.bpl
 
